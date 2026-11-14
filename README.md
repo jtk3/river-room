@@ -2,7 +2,9 @@
 
 A browser-based, play-money **no-limit Texas Hold’em cash game**. Take a seat at a fixed nine-seat table with one to eight computer opponents, each with a different playing style.
 
-**Play:** deployment link will be added after publication.
+**Play:** [Open River Room](https://river-room-jtk3.jtkennedy366246.chatgpt.site) (private owner access).
+
+**Source:** [jtk3/river-room](https://github.com/jtk3/river-room) (public, MIT licensed).
 
 ## Run locally
 
