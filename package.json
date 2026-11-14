@@ -1,0 +1,9 @@
+{
+  "name": "river-room",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Play-money no-limit Texas Hold'em",
+  "license": "MIT",
+  "scripts": {"test": "node --test", "check": "node --check dist/app.js && node --check dist/engine/holdem.js && node --check dist/engine/bots.js", "dev": "python3 -m http.server 5173 --directory dist"}
+}
