@@ -12,7 +12,7 @@ export function createGame(opponents = 5) {
   if (!Number.isInteger(opponents) || opponents < 1 || opponents > 8) throw new Error('Choose 1–8 opponents');
   const players = [{id:0,seat:0,name:'You',style:'Human',stack:1000,bet:0,total:0,hole:[],folded:false}];
   for (let i=0;i<opponents;i++) players.push({id:i+1,seat:Math.round((i+1)*9/(opponents+1)),name:BOT_NAMES[i],style:STYLES[i],stack:1000,bet:0,total:0,hole:[],folded:false});
-  return {version:VERSION, players, button:-1, smallBlind:5, bigBlind:10, hand:0, phase:'waiting', board:[], deck:[], burns:[], actor:null, currentBet:0, minRaise:10, log:[], awards:[], bankroll:1000*players.length};
+  return {version:VERSION, players, button:-1, smallBlind:5, bigBlind:10, hand:0, phase:'waiting', board:[], deck:[], burns:[], actor:null, currentBet:0, minRaise:10, log:[], awards:[], heroBuyins:1000, bankroll:1000*players.length};
 }
 function next(s, id, predicate = () => true) {
   for (let step=1; step<=s.players.length; step++) { const p=s.players[(id+step+s.players.length)%s.players.length]; if(predicate(p)) return p.id; }
@@ -28,7 +28,7 @@ export function startHand(input, rng = random) {
     Object.assign(p,{hole:[],bet:0,total:0,folded:false,acted:false,reopenAt:0,lastAction:''});
   }
   s.button=next(s,s.button); s.hand++; s.phase='preflop'; s.board=[];s.burns=[];s.deck=shuffled(undefined,rng);s.awards=[];
-  s.currentBet=s.bigBlind;s.minRaise=s.bigBlind;
+  s.currentBet=s.bigBlind;s.minRaise=s.bigBlind;s.showdown=false;
   // Deal one card at a time, starting left of the dealer.
   for(let round=0;round<2;round++) for(let step=1;step<=s.players.length;step++) s.players[(s.button+step)%s.players.length].hole.push(s.deck.pop());
   s.sb=s.players.length===2?s.button:next(s,s.button);s.bb=next(s,s.sb);
@@ -44,7 +44,7 @@ export function legalActions(s, id = s.actor) {
   const p=s.players[id], toCall=Math.max(0,s.currentBet-p.bet), max=p.bet+p.stack;
   const reopened=!p.acted || s.currentBet>=p.reopenAt;
   const contest=capable(s).some(o=>o.id!==id);
-  const min=s.currentBet===0 ? s.bigBlind : s.currentBet<s.bigBlind ? s.bigBlind : s.currentBet+s.minRaise;
+  const min=s.currentBet===0 ? s.bigBlind : s.currentBet+s.minRaise;
   return {fold:true,check:toCall===0,call:Math.min(toCall,p.stack),toCall,minRaiseTo:Math.min(min,max),fullRaiseTo:min,maxRaiseTo:max,canRaise:reopened&&contest&&max>s.currentBet};
 }
 export function act(input, id, action, amount) {
@@ -87,13 +87,19 @@ function advance(s,after) {
 export function settle(s,showdown=true) {
   const levels=[...new Set(s.players.map(p=>p.total).filter(Boolean))].sort((a,b)=>a-b);
   const ranks=new Map();if(showdown) for(const p of live(s)) ranks.set(p.id,evaluate([...s.board,...p.hole]));
-  s.awards=[];let previous=0;
+  s.awards=[];let previous=0;const pots=[];
   for(const level of levels) {
     const contributors=s.players.filter(p=>p.total>=level), chips=(level-previous)*contributors.length;previous=level;
+    const eligible=showdown?contributors.filter(p=>!p.folded):live(s);
+    const key=contributors.length===1?`refund-${contributors[0].id}`:eligible.map(p=>p.id).join(',');
+    const prior=pots.at(-1);
+    if(prior&&prior.key===key)prior.chips+=chips;
+    else pots.push({key,chips,contributors,eligible});
+  }
+  for(const {chips,contributors,eligible} of pots) {
     if(contributors.length===1) {
       const p=contributors[0];p.stack+=chips;s.awards.push({amount:chips,winners:[p.id],refund:true});log(s,`${p.name}: ${chips} uncalled chips returned.`);continue;
     }
-    const eligible=showdown?contributors.filter(p=>!p.folded):live(s);
     if(!eligible.length) throw new Error('Pot has no eligible player');
     const best=showdown?Math.max(...eligible.map(p=>ranks.get(p.id).score)):0;
     const winners=eligible.filter(p=>!showdown||ranks.get(p.id).score===best);
@@ -109,7 +115,7 @@ export function settle(s,showdown=true) {
 export function rebuy(input) {
   if(!['waiting','complete'].includes(input.phase))throw new Error('Rebuy between hands');
   if(input.players[0].stack>0)throw new Error('Rebuy is available when your stack is empty');
-  const s=clone(input);s.players[0].stack=1000;s.bankroll+=1000;log(s,'You rebuy for 1,000.');return s;
+  const s=clone(input);s.players[0].stack=1000;s.bankroll+=1000;s.heroBuyins=(s.heroBuyins||1000)+1000;log(s,'You rebuy for 1,000.');return s;
 }
 // Deliberately excludes opponents’ hole cards, the deck, and burned cards.
 export function botView(s,id) {

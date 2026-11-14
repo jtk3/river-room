@@ -5,5 +5,12 @@
   "type": "module",
   "description": "Play-money no-limit Texas Hold'em",
   "license": "MIT",
-  "scripts": {"test": "node --test", "check": "node --check dist/app.js && node --check dist/engine/holdem.js && node --check dist/engine/bots.js", "dev": "python3 -m http.server 5173 --directory dist"}
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check dist/app.js && node --check dist/engine/holdem.js && node --check dist/engine/bots.js",
+    "dev": "python3 -m http.server 5173 --directory dist"
+  },
+  "devDependencies": {
+    "happy-dom": "^21.0.4"
+  }
 }

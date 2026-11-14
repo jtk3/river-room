@@ -26,14 +26,13 @@ function render(){
   $('streetLabel').textContent=waiting?'YOUR SEAT IS WAITING':`HAND ${game.hand} · ${done?(game.showdown?'SHOWDOWN':'HAND COMPLETE'):game.phase.toUpperCase()}`;
   const winners=new Set(game.awards.filter(a=>!a.refund).flatMap(a=>a.winners));
   $('seats').innerHTML=seatPositions.map(({x,y},seat)=>{
-    const p=game.players.find(p=>p.seat===seat),style=`left:${x}%;top:${y}%`;
+    const p=game.players.find(p=>p.seat===seat),style=`left:clamp(44px, ${x}%, calc(100% - 44px));top:${y}%`;
     if(!p)return `<div class="seat empty" style="${style}" data-seat="${seat}"><div class="empty-seat">＋</div><div class="empty-text">OPEN SEAT</div></div>`;
     const reveal=p.id===0||(done&&game.showdown&&!p.folded),isWinner=done&&winners.has(p.id);
     const cards=(p.hole||[]).map(c=>card(c,!reveal)).join('');
-    return `<div class="seat ${p.id===0?'hero':''} ${p.folded?'folded':''} ${game.actor===p.id?'active':''} ${isWinner?'winner':''}" style="${style}" data-seat="${seat}" aria-label="${escape(p.name)}, ${escape(p.style)}, ${p.stack} chips${game.actor===p.id?', acting':''}"><div class="seat-cards">${cards}</div><div class="seat-shell"><div class="seat-top"><span class="avatar">${p.id===0?'♠':escape(p.name[0])}</span><div class="seat-name">${escape(p.name)}<small>${escape(p.style)}</small></div></div><div class="seat-stack">${fmt(p.stack)}</div>${game.button===p.id?'<span class="dealer" title="Dealer button">D</span>':''}</div><div class="seat-action">${isWinner?'✦ WINNER':game.actor===p.id?(paused?'Paused':'Thinking…'):escape(p.lastAction||'Ready to play')}</div>${p.bet?`<span class="seat-bet">${fmt(p.bet)}</span>`:''}</div>`;
+    return `<div class="seat ${p.id===0?'hero':''} ${p.folded?'folded':''} ${game.actor===p.id?'active':''} ${isWinner?'winner':''}" style="${style}" data-seat="${seat}" aria-label="${escape(p.name)}, ${escape(p.style)}, ${p.stack} chips${game.actor===p.id?', acting':''}"><div class="seat-cards">${cards}</div><div class="seat-shell"><div class="seat-top"><span class="avatar">${p.id===0?'♠':escape(p.name[0])}</span><div class="seat-name">${escape(p.name)}<small>${escape(p.style)}</small></div></div><div class="seat-stack">${fmt(p.stack)}</div>${game.button===p.id?'<span class="dealer" title="Dealer button">D</span>':''}</div><div class="seat-action">${isWinner?'✦ WINNER':game.actor===p.id?(paused?'Paused':p.id===0?'Your turn':'Thinking…'):escape(p.lastAction||'Ready to play')}</div>${p.bet?`<span class="seat-bet">${fmt(p.bet)}</span>`:''}</div>`;
   }).join('');
   $('heroStack').textContent=fmt(hero.stack);$('handCount').textContent=game.hand;
-  const invested=game.bankroll-game.players.filter(p=>p.id).reduce((n,p)=>n+p.stack+p.total,0);
   // The hero's buy-ins are tracked separately because bots can also rebuy.
   const heroBuyins=game.heroBuyins||1000;
   const net=hero.stack+hero.total-heroBuyins;
@@ -95,7 +94,7 @@ for(const button of document.querySelectorAll('[data-size]'))button.onclick=()=>
   const amount=Math.min(l.maxRaiseTo,Math.max(l.minRaiseTo,sizes[button.dataset.size]));$('raiseAmount').value=amount;$('raiseRange').value=amount;
 };
 $('dealButton').onclick=()=>{paused=false;update(startHand(game));};
-$('rebuyButton').onclick=()=>{const next=rebuy(game);next.heroBuyins=(game.heroBuyins||1000)+1000;update(next);};
+$('rebuyButton').onclick=()=>{update(rebuy(game));};
 $('pauseButton').onclick=()=>{paused=!paused;render();schedule();};
 $('pace').onchange=()=>{pace=Number($('pace').value);schedule();};
 function openDialog(id){clearTimeout(timer);$(id).showModal();}
