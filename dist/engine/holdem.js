@@ -1,4 +1,5 @@
 import { shuffled, evaluate, random } from "./cards.js";
+import { validateRoster } from "./player-settings.js";
 export const VERSION = 1;
 export const STREETS = ["preflop", "flop", "turn", "river"];
 export const BOT_NAMES = [
@@ -29,9 +30,10 @@ export function log(s, message) {
   s.log.push(message);
   s.log = s.log.slice(-90);
 }
-export function createGame(opponents = 5) {
+export function createGame(opponents = 5, roster = null) {
   if (!Number.isInteger(opponents) || opponents < 1 || opponents > 8)
     throw new Error("Choose 1–8 opponents");
+  const settings = roster === null ? null : validateRoster(roster);
   const players = [
     {
       id: 0,
@@ -49,8 +51,9 @@ export function createGame(opponents = 5) {
     players.push({
       id: i + 1,
       seat: Math.round(((i + 1) * 9) / (opponents + 1)),
-      name: BOT_NAMES[i],
+      name: settings ? settings[i].name : BOT_NAMES[i],
       style: STYLES[i],
+      ...(settings ? { personality: settings[i].personality } : {}),
       stack: 1000,
       bet: 0,
       total: 0,
@@ -323,12 +326,13 @@ export function botView(s, id) {
     pot: pot(s),
     bigBlind: s.bigBlind,
     legal: legalActions(s, id),
-    players: s.players.map(({ id, stack, bet, folded, style }) => ({
+    players: s.players.map(({ id, stack, bet, folded, style, personality }) => ({
       id,
       stack,
       bet,
       folded,
       style,
+      ...(personality ? { personality: { ...personality } } : {}),
     })),
   };
 }
