@@ -9,15 +9,15 @@ import {
   botView,
   rebuy,
   pot,
-} from "../dist/engine/holdem.js";
-import { evaluate, shuffled, RANKS, SUITS } from "../dist/engine/cards.js";
-import { chooseAction } from "../dist/engine/bots.js";
+} from "../public/game/engine/holdem.js";
+import { evaluate, shuffled, RANKS, SUITS } from "../public/game/engine/cards.js";
+import { chooseAction } from "../public/game/engine/bots.js";
 import {
   saveGame,
   loadGame,
   validateState,
   SAVE_KEY,
-} from "../dist/engine/storage.js";
+} from "../public/game/engine/storage.js";
 const cards = (s) =>
   s.split(" ").map((c) => SUITS.indexOf(c[1]) * 13 + RANKS.indexOf(c[0]));
 function seeded(seed = 42) {

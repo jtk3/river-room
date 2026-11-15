@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { handResults, careerTotals } from "../dist/engine/career.js";
+import { handResults, careerTotals } from "../public/game/engine/career.js";
 
 test("completed hands count net changes, not total buy-ins or stack sizes", () => {
   assert.deepEqual(handResults([1000, 3000, 1000], [1800, 2200, 1000]), [800, -800, 0]);

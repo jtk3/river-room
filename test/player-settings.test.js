@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createGame, startHand, botView } from "../dist/engine/holdem.js";
-import { personalityToProfile, validateRoster } from "../dist/engine/player-settings.js";
-import { chooseAction } from "../dist/engine/bots.js";
-import { saveGame, loadGame } from "../dist/engine/storage.js";
+import { createGame, startHand, botView } from "../public/game/engine/holdem.js";
+import { personalityToProfile, validateRoster } from "../public/game/engine/player-settings.js";
+import { chooseAction } from "../public/game/engine/bots.js";
+import { saveGame, loadGame } from "../public/game/engine/storage.js";
 
 const traits = { selectiveness: 50, aggression: 50, bluffing: 50, betSize: 50 };
 const roster = Array.from({ length: 8 }, (_, i) => ({ name: `Player ${i + 1}`, personality: { ...traits } }));
@@ -37,4 +37,14 @@ test("new game snapshots player settings while old saves remain compatible", () 
   assert.deepEqual(loadGame(storage), started);
   saveGame(startHand(createGame(1), () => 0.5), storage);
   assert.equal(loadGame(storage).players[1].personality, undefined);
+});
+
+test("legacy bot names migrate while deliberate custom names remain untouched", () => {
+  const store = new Map();
+  const storage = { setItem: (k, v) => store.set(k, v), getItem: k => store.get(k) ?? null };
+  const legacy=createGame(1);legacy.players[1].name='Mara';saveGame(legacy,storage);
+  assert.equal(loadGame(storage).players[1].name,'HAL');
+  const custom=Array.from({length:8},(_,i)=>({name:i===0?'Mara':`Player ${i}`,personality:{...traits}}));
+  const customGame=createGame(1,custom);saveGame(customGame,storage);
+  assert.equal(loadGame(storage).players[1].name,'Mara');
 });

@@ -2,16 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { Window } from "happy-dom";
-import * as holdem from "../dist/engine/holdem.js";
-import * as bots from "../dist/engine/bots.js";
-import * as cards from "../dist/engine/cards.js";
-import * as storage from "../dist/engine/storage.js";
+import * as holdem from "../public/game/engine/holdem.js";
+import * as bots from "../public/game/engine/bots.js";
+import * as cards from "../public/game/engine/cards.js";
+import * as storage from "../public/game/engine/storage.js";
+import { handResults } from "../public/game/engine/career.js";
 const html = readFileSync(
-  new URL("../dist/index.html", import.meta.url),
+  new URL("../public/game/index.html", import.meta.url),
   "utf8",
 ).replace(/<script[\s\S]*?<\/script>/g, "");
 const app = readFileSync(
-  new URL("../dist/app.js", import.meta.url),
+  new URL("../public/game/app.js", import.meta.url),
   "utf8",
 ).replace(/^import[\s\S]*?;\n/gm, "");
 function setup(saved) {
@@ -30,7 +31,9 @@ function setup(saved) {
     return id;
   };
   window.clearTimeout = (id) => timers.delete(id);
+  window.fetch = async () => ({ ok: false });
   Object.assign(window, holdem, bots, cards, {
+    handResults,
     chooseAction: (v) => ({ action: v.legal.check ? "check" : "call" }),
     loadGame: () => storage.loadGame(window.localStorage),
     saveGame: (s) => storage.saveGame(s, window.localStorage),
@@ -63,6 +66,7 @@ test("setup, nine fixed seats, legal human actions, bots, hand completion, and n
     ui.$("setupForm").dispatchEvent(
       new ui.window.Event("submit", { cancelable: true }),
     );
+    await new Promise(resolve => setImmediate(resolve));
     assert.equal(ui.$("setupDialog").open, false);
     assert.equal(ui.window.document.querySelectorAll(".seat").length, 9);
     assert.equal(ui.window.document.querySelectorAll(".seat.empty").length, 7);

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { evaluate } from "../dist/engine/cards.js";
+import { evaluate } from "../public/game/engine/cards.js";
 test("all 2,598,960 five-card hands match the standard category distribution", () => {
   const counts = Array(9).fill(0);
   for (let a = 0; a < 48; a++)
