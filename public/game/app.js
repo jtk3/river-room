@@ -104,7 +104,13 @@ function beginHand() {
   if(!next.career) {
     try {next.career={tableId:crypto.randomUUID(),playerId:getCareerId(),nickname:'',rosterVersion:0};} catch { /* unavailable storage */ }
   }
-  if(next.career)next.career.startStacks=startStacks;
+  if(next.career) {
+    if(Object.hasOwn(next.career, 'pendingNickname')) {
+      next.career.nickname=next.career.pendingNickname;
+      delete next.career.pendingNickname;
+    }
+    next.career.startStacks=startStacks;
+  }
   if(next.phase === "complete") recordCareer(next);
   update(next);
 }
@@ -327,6 +333,27 @@ function openDialog(id) {
   clearTimeout(timer);
   $(id).showModal();
 }
+$("careerSettingsButton").onclick = () => {
+  $("careerSettingsName").value=game.career?.pendingNickname ?? game.career?.nickname ?? '';
+  openDialog("careerDialog");
+};
+$("careerForm").onsubmit = (e) => {
+  e.preventDefault();
+  const nickname=$("careerSettingsName").value.trim();
+  if(nickname.length>32 || /[\u0000-\u001f\u007f]/.test(nickname)) {
+    $("careerSettingsName").setCustomValidity('Use up to 32 printable characters.');
+    $("careerSettingsName").reportValidity(); return;
+  }
+  $("careerSettingsName").setCustomValidity('');
+  try {
+    if(!game.career)game.career={tableId:crypto.randomUUID(),playerId:getCareerId(),nickname:'',rosterVersion:0};
+    game.career.pendingNickname=nickname;
+    persist();
+    $("careerDialog").close();
+    notice=nickname ? `Rankings nickname saved for your next hand: ${nickname}.` : 'Your next hands will be anonymous.';
+    render();
+  } catch { $("announcement").textContent='Could not save rankings preferences on this browser.'; }
+};
 $("newButton").onclick = () => {
   $("opponents").value = game.players.length - 1;
   $("opponentCount").textContent = game.players.length - 1;

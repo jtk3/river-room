@@ -162,3 +162,20 @@ test("corrupt save recovers into a fresh setup with a visible warning", async ()
     await ui.close();
   }
 });
+test("an existing high-stack game can join rankings without resetting chips", async () => {
+  const saved=holdem.createGame(1);
+  saved.players[0].stack=104000;
+  saved.bankroll=105000;
+  const ui=setup(saved);
+  try {
+    ui.$('careerSettingsButton').click();
+    assert.equal(ui.$('careerDialog').open,true);
+    ui.$('careerSettingsName').value='Lynette';
+    ui.$('careerForm').dispatchEvent(new ui.window.Event('submit',{cancelable:true}));
+    assert.equal(ui.state().players[0].stack,104000);
+    assert.equal(ui.state().career.pendingNickname,'Lynette');
+    ui.$('dealButton').click();
+    assert.equal(ui.state().career.nickname,'Lynette');
+    assert.equal(ui.state().players[0].stack+ui.state().players[0].total,104000);
+  } finally { await ui.close(); }
+});

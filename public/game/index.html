@@ -135,6 +135,7 @@
             <div><span>Session result</span><strong id="net">0</strong></div>
             <div><span>Hands dealt</span><strong id="handCount">0</strong></div>
           </div>
+          <button id="careerSettingsButton" class="text-button" type="button">Set rankings nickname →</button>
           <div class="session-note">
             <span>♧</span> Real decisions. Imaginary money.
           </div>
@@ -174,6 +175,16 @@
         >Open source ↗</a
       >
     </footer>
+    <dialog id="careerDialog">
+      <button class="dialog-close" aria-label="Close" data-close>×</button>
+      <form id="careerForm">
+        <p class="eyebrow">CAREER RANKINGS</p><h2>Choose your nickname</h2>
+        <p>Your nickname and results are public. Tracking begins with your next hand; previous hands and winnings are not imported. Leave blank to play anonymously.</p>
+        <label for="careerSettingsName">Nickname (optional)</label>
+        <input id="careerSettingsName" type="text" maxlength="32" autocomplete="nickname">
+        <button type="submit" class="primary">Save for next hand</button>
+      </form>
+    </dialog>
     <dialog id="setupDialog">
       <form id="setupForm">
         <button
