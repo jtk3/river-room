@@ -75,6 +75,7 @@ export function createGame(opponents = 5, roster = null) {
     currentBet: 0,
     minRaise: 10,
     log: [],
+    actionHistory: [],
     awards: [],
     heroBuyins: 1000,
     bankroll: 1000 * players.length,
@@ -119,6 +120,7 @@ export function startHand(input, rng = random) {
   s.hand++;
   s.phase = "preflop";
   s.board = [];
+  s.actionHistory = [];
   s.burns = [];
   s.deck = shuffled(undefined, rng);
   s.awards = [];
@@ -167,6 +169,17 @@ export function act(input, id, action, amount) {
     legal = legalActions(s, id);
   if (!legal) throw new Error("It is not your turn");
   const p = s.players[id];
+  const event = {
+    playerId: id,
+    street: s.phase,
+    action,
+    toCall: legal.toCall,
+    potBefore: pot(s),
+    currentBet: s.currentBet,
+    playerBet: p.bet,
+    stackBefore: p.stack,
+    board: [...s.board],
+  };
   if (action === "fold") {
     p.folded = true;
     p.lastAction = "Fold";
@@ -191,6 +204,8 @@ export function act(input, id, action, amount) {
     if (amount - old >= s.minRaise) s.minRaise = amount - old;
     p.lastAction = `${old === 0 ? "Bet" : "Raise to"} ${amount}`;
   } else throw new Error("Unknown action");
+  event.amount = action === "raise" ? amount : action === "call" ? legal.call : 0;
+  (s.actionHistory ||= []).push(event);
   p.acted = true;
   p.reopenAt = s.currentBet + s.minRaise;
   if (p.stack === 0 && !p.folded) p.lastAction += " · All-in";
@@ -323,6 +338,8 @@ export function botView(s, id) {
     hole: [...s.players[id].hole],
     board: [...s.board],
     phase: s.phase,
+    button: s.button,
+    actionHistory: (s.actionHistory || []).map((a) => ({ ...a, board: [...a.board] })),
     pot: pot(s),
     bigBlind: s.bigBlind,
     legal: legalActions(s, id),

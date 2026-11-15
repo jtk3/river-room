@@ -15,3 +15,9 @@ Career rankings are public and based on completed hands after the feature goes l
 Requires Node.js 22.13 or later and npm. Install with `npm ci`, run checks with `npx tsc --noEmit` and `node --test`, and build with `npm run build`. The site uses a server-backed Sites deployment with a D1 database binding named `DB`. Schema migrations are in `drizzle/`. Local migrations use the commands documented by the Sites runtime; do not apply production migrations by hand.
 
 The static game is in `public/game/`; poker engine code has no browser DOM dependency. API routes live in `app/api/`. The leaderboard does not verify the client-reported outcome. Any future online multiplayer or real-money project needs a server-authoritative game engine.
+
+## Computer opponents
+
+Opponents use a heuristic strategy, not a poker solver. A decision view includes the dealer position and the public actions taken during the current hand; opponent hole cards, burns, and the actual deck remain hidden. The policy estimates equity using 120 simulated deals, roughly weights potential opposing hands using observed calls and raises, and considers preflop position, action, stack depth, board texture, and pot odds. It preserves each player's selectiveness, aggression, bluffing, and bet-sizing sliders. Saved games created before action-history tracking remain usable; only actions after the upgrade are available for the current hand.
+
+Run the reproducible test comparison with `node scripts/bench/compare-bots.mjs 4000`. It rotates seats in a six-player game and compares the revised policy with the prior one in a fixed, balanced-style setup. Results are noisy and do not establish strength against people, other bot profiles, or different table sizes. The development benchmark uses fresh stacks per hand and is not a complete model of career cash-game play.
