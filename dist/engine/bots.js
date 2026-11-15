@@ -1,4 +1,5 @@
 import { evaluate, shuffled, rank, suit, random } from "./cards.js";
+import { personalityToProfile } from "./player-settings.js";
 const PROFILES = {
   "Tight aggressive": {
     edge: 0.08,
@@ -54,7 +55,7 @@ export function estimateEquity(view, rng = random, samples = 72) {
 }
 export function chooseAction(view, rng = random) {
   const p = view.players.find((p) => p.id === view.id),
-    profile = PROFILES[p.style] || PROFILES.Balanced;
+    profile = p.personality ? personalityToProfile(p.personality) : (PROFILES[p.style] || PROFILES.Balanced);
   const l = view.legal;
   if (!l) throw new Error("No legal bot action");
   let equity = estimateEquity(view, rng);
